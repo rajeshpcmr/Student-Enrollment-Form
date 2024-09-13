@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Enrollment Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Student Enrollment Form</h2>
+        <form id="enrollmentForm">
+            <div class="mb-3">
+                <label for="rollNo" class="form-label">Roll No</label>
+                <input type="text" class="form-control" id="rollNo" required>
+            </div>
+            <div class="mb-3">
+                <label for="fullName" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="fullName" disabled required>
+            </div>
+            <div class="mb-3">
+                <label for="class" class="form-label">Class</label>
+                <input type="text" class="form-control" id="class" disabled required>
+            </div>
+            <div class="mb-3">
+                <label for="birthDate" class="form-label">Birth Date</label>
+                <input type="date" class="form-control" id="birthDate" disabled required>
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <input type="text" class="form-control" id="address" disabled required>
+            </div>
+            <div class="mb-3">
+                <label for="enrollmentDate" class="form-label">Enrollment Date</label>
+                <input type="date" class="form-control" id="enrollmentDate" disabled required>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-primary me-2" id="saveBtn" disabled>Save</button>
+                <button type="button" class="btn btn-warning me-2" id="updateBtn" disabled>Update</button>
+                <button type="button" class="btn btn-danger" id="resetBtn" disabled>Reset</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const rollNo = document.getElementById('rollNo');
+    const fullName = document.getElementById('fullName');
+    const studentClass = document.getElementById('class');
+    const birthDate = document.getElementById('birthDate');
+    const address = document.getElementById('address');
+    const enrollmentDate = document.getElementById('enrollmentDate');
+    const saveBtn = document.getElementById('saveBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Function to disable or enable form fields
+    function setFormState(enabled) {
+        fullName.disabled = !enabled;
+        studentClass.disabled = !enabled;
+        birthDate.disabled = !enabled;
+        address.disabled = !enabled;
+        enrollmentDate.disabled = !enabled;
+        resetBtn.disabled = !enabled;
+    }
+
+    // Function to reset the form
+    function resetForm() {
+        rollNo.value = '';
+        fullName.value = '';
+        studentClass.value = '';
+        birthDate.value = '';
+        address.value = '';
+        enrollmentDate.value = '';
+        saveBtn.disabled = true;
+        updateBtn.disabled = true;
+        setFormState(false);
+        rollNo.disabled = false;
+        rollNo.focus();
+    }
+
+    // Initialize the form on page load
+    resetForm();
+
+    // Fetch data from JsonPowerDB
+   // Fetch data from JsonPowerDB
+function fetchStudentData(id) {
+    const reqData = {
+        token: "90932016|-31949219571410211|90962199",  // Replace with your JsonPowerDB token
+        dbname: "SCHOOL-DB",
+        relation: "STUDENT-TABLE",
+        cmd: "GET_BY_KEY",
+        key: id
+    };
+
+    // Fetch data using JsonPowerDB API
+    return fetch("http://api.login2explore.com:5577/api/irl", {
+        method: "POST",
+        body: JSON.stringify(reqData),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(response => {
+        console.log(response);  // Debug the API response
+        if (response.status === 200 && response.data) {
+            const studentData = JSON.parse(response.data);
+            return studentData;
+        } else {
+            return null;
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching student data:", error);
+        return null;
+    });
+}
+
+// Check Roll No
+rollNo.addEventListener('input', () => {
+    const id = rollNo.value.trim();
+
+    if (id) {
+        fetchStudentData(id).then((studentData) => {
+            if (studentData) {
+                // If student exists, populate the form
+                fullName.value = studentData.fullName;
+                studentClass.value = studentData.class;
+                birthDate.value = studentData.birthDate;
+                address.value = studentData.address;
+                enrollmentDate.value = studentData.enrollmentDate;
+
+                saveBtn.disabled = true;
+                updateBtn.disabled = false;
+                setFormState(true);
+                rollNo.disabled = true;
+                fullName.focus();
+            } else {
+                // If student does not exist, enable save button
+                resetForm();
+                saveBtn.disabled = false;
+                setFormState(true);
+                rollNo.disabled = true;
+                fullName.focus();
+            }
+        });
+    } else {
+        resetForm();
+    }
+});
+
+
+    // Save student data
+    function saveStudentData(data) {
+        const reqData = {
+            token: "90932016|-31949219571410211|90962199",  // Replace with your JsonPowerDB token
+            dbname: "SCHOOL-DB",
+            relation: "STUDENT-TABLE",
+            cmd: "PUT",
+            jsonStr: data
+        };
+
+        // Save data to JsonPowerDB
+        return fetch("http://api.login2explore.com:5577/api/iml", {
+            method: "POST",
+            body: JSON.stringify(reqData),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json());
+    }
+
+    // Update student data
+    function updateStudentData(data) {
+        const reqData = {
+            token: "90932016|-31949219571410211|90962199",  // Replace with your JsonPowerDB token
+            dbname: "SCHOOL-DB",
+            relation: "STUDENT-TABLE",
+            cmd: "UPDATE",
+            jsonStr: data
+        };
+
+        // Update data in JsonPowerDB
+        return fetch("http://api.login2explore.com:5577/api/iml", {
+            method: "POST",
+            body: JSON.stringify(reqData),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json());
+    }
+
+    // Check Roll No
+    rollNo.addEventListener('input', () => {
+        const id = rollNo.value.trim();
+
+        if (id) {
+            fetchStudentData(id).then((response) => {
+                if (response.status === 200 && response.data) {
+                    // If student exists, populate the form
+                    const studentData = JSON.parse(response.data);
+                    fullName.value = studentData.fullName;
+                    studentClass.value = studentData.class;
+                    birthDate.value = studentData.birthDate;
+                    address.value = studentData.address;
+                    enrollmentDate.value = studentData.enrollmentDate;
+
+                    saveBtn.disabled = true;
+                    updateBtn.disabled = false;
+                    setFormState(true);
+                    rollNo.disabled = true;
+                    fullName.focus();
+                } else {
+                    // If student does not exist, enable save button
+                    resetForm();
+                    saveBtn.disabled = false;
+                    setFormState(true);
+                    rollNo.disabled = true;
+                    fullName.focus();
+                }
+            });
+        } else {
+            resetForm();
+        }
+    });
+
+    // Save button click event
+    saveBtn.addEventListener('click', () => {
+        if (validateForm()) {
+            const studentData = JSON.stringify({
+                rollNo: rollNo.value,
+                fullName: fullName.value,
+                class: studentClass.value,
+                birthDate: birthDate.value,
+                address: address.value,
+                enrollmentDate: enrollmentDate.value
+            });
+
+            saveStudentData(studentData).then((response) => {
+                alert('Student saved successfully!');
+                resetForm();
+            });
+        }
+    });
+
+    // Update button click event
+    updateBtn.addEventListener('click', () => {
+        if (validateForm()) {
+            const studentData = JSON.stringify({
+                rollNo: rollNo.value,
+                fullName: fullName.value,
+                class: studentClass.value,
+                birthDate: birthDate.value,
+                address: address.value,
+                enrollmentDate: enrollmentDate.value
+            });
+
+            updateStudentData(studentData).then((response) => {
+                alert('Student updated successfully!');
+                resetForm();
+            });
+        }
+    });
+
+    // Reset button click event
+    resetBtn.addEventListener('click', resetForm);
+
+    // Validate form before saving/updating
+    function validateForm() {
+        return rollNo.value.trim() &&
+               fullName.value.trim() &&
+               studentClass.value.trim() &&
+               birthDate.value.trim() &&
+               address.value.trim() &&
+               enrollmentDate.value.trim();
+    }
+});
+
+    </script>
+</body>
+</html>
+
